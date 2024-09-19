@@ -1,0 +1,8 @@
+pyaudio
+librosa
+numpy
+torch
+transformers
+whisper
+scipy
+gtts
