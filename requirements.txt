@@ -1,8 +1,5 @@
-pyaudio
-librosa
-numpy
-torch
-transformers
+fastapi
+uvicorn
 whisper
-scipy
 gtts
+soundfile
