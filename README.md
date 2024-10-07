@@ -13,13 +13,14 @@ This project implements a real-time multilingual speech translation system. It i
 ## Directory Structure
 
 #### Python Backend:
-- `audio_capture/`: Handles audio capture and preprocessing.
-- `models/`: Contains pretrained models for STT, translation, and TTS.
-- `real_time_processing/`: Integrates the pipeline components.
-- `utils/`: Utility functions and classes.
-- `tests/`: Unit tests for each module.
-- `scripts/`: Helper scripts for dataset preparation and pipeline execution.
-- `config/`: Configuration files for models and pipelines.
+- `api/`: Contains the API code.
+
+To run the python server:
+    1. Build the dockerfile by `sudo docker build -t real-time-translation .`
+    2. Run the docker container by `sudo docker run -d -p 8000:8000 real-time-translation`
+
+To test the API locally you can use curl:
+`curl -X POST -F "file=@/path/to/audiofile.wav" http://localhost:8000/upload` 
 
 #### Flutter App:
 - `lib/`: Contains the Flutter app's core codebase.
