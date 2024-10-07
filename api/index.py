@@ -12,7 +12,7 @@ app = FastAPI()
 # Define the Speech-To-Text Model using Whisper
 class SpeechToTextModel:
     def __init__(self):
-        self.model = whisper.load_model("base")
+        self.model = whisper.load_model("base",device="cpu")
 
     def transcribe(self, audio_data):
         result = self.model.transcribe(audio_data)
