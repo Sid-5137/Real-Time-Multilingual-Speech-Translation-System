@@ -20,7 +20,7 @@ To run the python server:
     2. Run the docker container by `sudo docker run -d -p 8000:8000 real-time-translation`
 
 To test the API locally you can use curl:
-`curl -X POST -F "file=@/path/to/audiofile.wav" http://localhost:8000/upload` 
+`curl -X POST -F "file=@/path/to/audiofile.wav" http://localhost:8000/upload/` 
 
 #### Flutter App:
 - `lib/`: Contains the Flutter app's core codebase.
