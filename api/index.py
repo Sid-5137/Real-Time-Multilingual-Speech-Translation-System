@@ -5,7 +5,8 @@ import torchaudio
 from speechbrain.inference import Tacotron2, HIFIGAN
 from transformers import MarianMTModel, MarianTokenizer
 from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 import logging
 import uvicorn
 
@@ -14,6 +15,21 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
+
+# Define directories for uploads and output
+UPLOAD_DIR = "/home/sid/Desktop/Work/Real-Time-Multilingual-Speech-Translation-System/voicelink/upload"
+OUTPUT_DIR = "/home/sid/Desktop/Work/Real-Time-Multilingual-Speech-Translation-System/voicelink/output"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+# CORS middleware to allow requests from all origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows requests from all origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Speech-to-Text Model using Whisper
 class SpeechToTextModel:
@@ -103,36 +119,44 @@ class VoiceCloningPipeline:
             translated_text = self.translator.translate(transcribed_text, source_lang=detected_language, target_lang="en")
             tts_output = self.tts_model.synthesize(translated_text)
 
-            output_file_path = os.path.join("output", os.path.basename(audio_path).replace(".wav", "_translated.wav"))
+            output_file_path = os.path.join(OUTPUT_DIR, os.path.basename(audio_path).replace(".wav", "_translated.wav"))
             self.tts_model.save_audio(tts_output, output_file_path)
-            return translated_text, output_file_path
+            return translated_text, os.path.basename(output_file_path)  # Return only filename for URL access
         except Exception as e:
             logger.error(f"Processing error: {e}")
             raise HTTPException(status_code=500, detail=f"Processing error: {str(e)}")
 
 pipeline = VoiceCloningPipeline()
-OUTPUT_DIR = "output"
-os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 @app.post("/upload/")
 async def upload_file(file: UploadFile = File(...)):
-    input_file_path = os.path.join(OUTPUT_DIR, file.filename)
+    input_file_path = os.path.join(UPLOAD_DIR, file.filename)
 
     with open(input_file_path, "wb") as buffer:
         buffer.write(await file.read())
 
     try:
-        translated_text, output_file_path = pipeline.process_audio(input_file_path)
+        translated_text, output_filename = pipeline.process_audio(input_file_path)
+        output_url = f"http://localhost:8000/output/{output_filename}"  # URL to access the output audio file
         return JSONResponse(content={
             "message": "File processed successfully",
             "translated_text": translated_text,
-            "output_file": output_file_path
+            "output_file": output_url
         })
     except HTTPException as e:
         raise e
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail="Unexpected error occurred during processing.")
+
+# Endpoint to serve the output audio file
+@app.get("/output/{filename}")
+async def get_output_audio(filename: str):
+    file_path = os.path.join(OUTPUT_DIR, filename)
+    if os.path.exists(file_path):
+        return FileResponse(file_path, media_type="audio/wav", filename=filename)
+    else:
+        raise HTTPException(status_code=404, detail="File not found")
 
 # Run the API with Uvicorn
 if __name__ == "__main__":

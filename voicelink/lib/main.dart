@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:voicelink/home.dart';
+import 'package:voicelink/home_chrome.dart';
 
 void main() {
   runApp(const VoiceLink());
@@ -16,7 +17,7 @@ class VoiceLink extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
+      home: const FileUploadPage(),
     );
   }
 }
